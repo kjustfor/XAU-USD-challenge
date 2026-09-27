@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0d12">
+<title>XAU/USD 14-Day Challenge</title>
+<style>
+:root{--bg:#0b0d12;--card:#141821;--card2:#1b202b;--text:#f4f6f8;--muted:#9ba3b2;--line:#29303c;--accent:#7dd3fc;--good:#6ee7b7;--bad:#fb7185;--warn:#fbbf24}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.app{max-width:720px;margin:auto;padding:20px 16px 44px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+h1{font-size:25px;margin:0 0 4px}.sub{color:var(--muted);font-size:13px}.badge{padding:7px 10px;border:1px solid var(--line);border-radius:999px;color:var(--accent);font-size:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:14px}
+.hero{background:linear-gradient(145deg,#151b25,#10131a)}.big{font-size:38px;font-weight:750;margin:3px 0}.muted{color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.metric{background:var(--card2);border-radius:12px;padding:12px}.metric b{display:block;font-size:19px;margin-top:4px}
+.progress{height:9px;background:#252b35;border-radius:99px;overflow:hidden;margin:12px 0}.bar{height:100%;background:var(--accent);width:0%;transition:.25s}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:center}.section-title{font-weight:700;margin-bottom:10px}
+input,select,button,textarea{font:inherit}input,select,textarea{width:100%;background:#0e1117;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px}label{font-size:12px;color:var(--muted);display:block;margin-bottom:5px}
+.formgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.btn{border:0;border-radius:10px;padding:11px 14px;background:var(--accent);color:#071018;font-weight:700;cursor:pointer}.btn.secondary{background:var(--card2);color:var(--text);border:1px solid var(--line)}
+.trade{border-top:1px solid var(--line);padding:12px 0}.trade:first-of-type{border-top:0}.tradehead{display:flex;justify-content:space-between;margin-bottom:8px}.status{font-size:12px;padding:4px 7px;border-radius:999px;background:var(--card2)}.green{color:var(--good)}.red{color:var(--bad)}.yellow{color:var(--warn)}
+.daynav{display:flex;gap:8px;overflow:auto;padding-bottom:2px}.daynav button{white-space:nowrap}.active{outline:2px solid var(--accent)!important}
+.small{font-size:12px}.note{min-height:70px;resize:vertical}.footer{color:var(--muted);font-size:11px;text-align:center;margin-top:18px;line-height:1.5}
+@media(min-width:600px){.grid{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div><h1>XAU/USD Challenge</h1><div class="sub">14 days • $60 → $1,000 • 3 trades/day</div></div>
+    <div class="badge" id="dayBadge">Day 1</div>
+  </div>
+
+  <div class="card hero">
+    <div class="muted small">CURRENT BALANCE</div>
+    <div class="big" id="balance">$60.00</div>
+    <div class="progress"><div class="bar" id="progress"></div></div>
+    <div class="row small"><span id="progressText">0.0% of goal</span><span id="gainText">$0.00 gained</span></div>
+  </div>
+
+  <div class="grid">
+    <div class="metric"><span class="muted small">Today's target</span><b id="target">$73.36</b></div>
+    <div class="metric"><span class="muted small">Profit needed</span><b id="needed">$13.36</b></div>
+    <div class="metric"><span class="muted small">Per trade</span><b id="perTrade">$4.45</b></div>
+    <div class="metric"><span class="muted small">Suggested lot</span><b id="lot">0.03</b></div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Challenge settings</div>
+    <div class="formgrid">
+      <div><label>Starting balance</label><input id="start" type="number" step="0.01" value="60"></div>
+      <div><label>Goal</label><input id="goal" type="number" step="0.01" value="1000"></div>
+      <div><label>Days</label><input id="days" type="number" min="1" value="14"></div>
+      <div><label>Trades/day</label><input id="tradesPerDay" type="number" min="1" value="3"></div>
+      <div><label>Spread (points)</label><input id="spread" type="number" step="0.1" value="1"></div>
+      <div><label>$ move target / trade</label><input id="move" type="number" step="0.1" value="5"></div>
+    </div>
+    <button class="btn secondary" style="margin-top:10px" onclick="saveSettings()">Save settings</button>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Day selection</div>
+    <div class="daynav" id="daynav"></div>
+  </div>
+
+  <div class="card">
+    <div class="row"><div class="section-title" style="margin:0">Today's trades</div><span class="status" id="dayStatus">Open</span></div>
+    <div id="trades"></div>
+    <div style="border-top:1px solid var(--line);padding-top:12px;margin-top:4px">
+      <div class="grid">
+        <div class="metric"><span class="muted small">Day P/L</span><b id="dayPL">$0.00</b></div>
+        <div class="metric"><span class="muted small">Day end</span><b id="dayEnd">$60.00</b></div>
+        <div class="metric"><span class="muted small">Required</span><b id="dayRequired">$13.36</b></div>
+        <div class="metric"><span class="muted small">Progress</span><b id="dayPct">0%</b></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Day notes</div>
+    <textarea id="notes" class="note" placeholder="Setup quality, mistakes, market conditions, lessons..."></textarea>
+    <button class="btn secondary" style="margin-top:10px" onclick="saveNotes()">Save notes</button>
+  </div>
+
+  <div class="card">
+    <div class="section-title">14-day overview</div>
+    <div id="overview"></div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Risk reminder</div>
+    <div class="small muted">The 22.26% daily compounding target is mathematically required for $60 → $1,000 in 14 days, but it is an aggressive trading objective. This tracker does not guarantee returns. Verify your broker's XAU/USD contract size before using the lot estimate.</div>
+  </div>
+  <div class="footer">All challenge data is stored locally in this browser on this device.</div>
+</div>
+
+<script>
+const KEY="xau14challenge_v1";
+let S=JSON.parse(localStorage.getItem(KEY)||"null")||{
+ settings:{start:60,goal:1000,days:14,tradesPerDay:3,spread:1,move:5},
+ selectedDay:1,
+ trades:{},notes:{}
+};
+function save(){localStorage.setItem(KEY,JSON.stringify(S))}
+function settings(){return S.settings}
+function targetForDay(d){
+ const {start,goal,days}=settings();
+ return start*Math.pow(goal/start,d/days);
+}
+function startOfDay(d){return d===1?settings().start:targetForDay(d-1)}
+function ensureTrades(d){
+ if(!S.trades[d]) S.trades[d]=Array.from({length:settings().tradesPerDay},()=>({pl:"",lot:"",result:""}));
+ while(S.trades[d].length<settings().tradesPerDay)S.trades[d].push({pl:"",lot:"",result:""});
+ if(S.trades[d].length>settings().tradesPerDay)S.trades[d]=S.trades[d].slice(0,settings().tradesPerDay);
+}
+function fmt(n){return "$"+Number(n||0).toFixed(2)}
+function render(){
+ const s=settings(),d=S.selectedDay;ensureTrades(d);
+ document.getElementById("dayBadge").textContent="Day "+d;
+ const tgt=targetForDay(d), base=startOfDay(d), required=tgt-base;
+ document.getElementById("target").textContent=fmt(tgt);
+ document.getElementById("needed").textContent=fmt(required);
+ document.getElementById("perTrade").textContent=fmt(required/s.tradesPerDay);
+ // Assumes 0.01 lot ≈ $1 per $1 XAU move; scale linearly to chosen $ move.
+ const lot=Math.max(.01,Math.ceil((required/s.tradesPerDay/s.move/.01)*100)/100);
+ document.getElementById("lot").textContent=lot.toFixed(2);
+ let cumulative=0;
+ for(let day=1;day<=s.days;day++){ensureTrades(day);cumulative+=S.trades[day].reduce((a,t)=>a+(parseFloat(t.pl)||0),0)}
+ const current=s.start+cumulative, pct=Math.max(0,Math.min(100,(current-s.start)/(s.goal-s.start)*100));
+ document.getElementById("balance").textContent=fmt(current);
+ document.getElementById("progress").style.width=pct+"%";
+ document.getElementById("progressText").textContent=pct.toFixed(1)+"% of goal";
+ document.getElementById("gainText").textContent=fmt(current-s.start)+" gained";
+ renderNav();renderTrades();renderDaySummary();renderNotes();renderOverview();
+}
+function renderNav(){
+ const el=document.getElementById("daynav");el.innerHTML="";
+ for(let d=1;d<=settings().days;d++){let b=document.createElement("button");b.className="btn secondary small"+(d===S.selectedDay?" active":"");b.textContent="Day "+d;b.onclick=()=>{S.selectedDay=d;save();render()};el.appendChild(b)}
+}
+function renderTrades(){
+ const el=document.getElementById("trades");el.innerHTML="";
+ S.trades[S.selectedDay].forEach((t,i)=>{
+  const div=document.createElement("div");div.className="trade";
+  div.innerHTML=`<div class="tradehead"><b>Trade ${i+1}</b><span class="status">${t.result||"Not logged"}</span></div>
+  <div class="formgrid">
+   <div><label>P/L ($)</label><input type="number" step="0.01" value="${t.pl}" oninput="tradeUpdate(${i},'pl',this.value)"></div>
+   <div><label>Lot size</label><input type="number" step="0.01" min="0.01" value="${t.lot}" placeholder="${document.getElementById('lot').textContent}" oninput="tradeUpdate(${i},'lot',this.value)"></div>
+  </div>
+  <div style="margin-top:8px;display:flex;gap:7px">
+   <button class="btn secondary small" onclick="setResult(${i},'Win')">Win</button>
+   <button class="btn secondary small" onclick="setResult(${i},'Loss')">Loss</button>
+   <button class="btn secondary small" onclick="setResult(${i},'BE')">BE</button>
+  </div>`;
+  el.appendChild(div);
+ })
+}
+function tradeUpdate(i,k,v){S.trades[S.selectedDay][i][k]=v;save();renderDaySummary();renderOverview();updateBalanceOnly()}
+function setResult(i,r){S.trades[S.selectedDay][i].result=r;save();renderTrades();renderDaySummary();renderOverview();updateBalanceOnly()}
+function updateBalanceOnly(){
+ let p=0;for(let d=1;d<=settings().days;d++){ensureTrades(d);p+=S.trades[d].reduce((a,t)=>a+(parseFloat(t.pl)||0),0)}
+ const cur=settings().start+p,pct=Math.max(0,Math.min(100,(cur-settings().start)/(settings().goal-settings().start)*100));
+ document.getElementById("balance").textContent=fmt(cur);document.getElementById("progress").style.width=pct+"%";document.getElementById("progressText").textContent=pct.toFixed(1)+"% of goal";document.getElementById("gainText").textContent=fmt(cur-settings().start)+" gained";
+}
+function renderDaySummary(){
+ const s=settings(),d=S.selectedDay,base=startOfDay(d),tgt=targetForDay(d),pl=S.trades[d].reduce((a,t)=>a+(parseFloat(t.pl)||0),0);
+ document.getElementById("dayPL").textContent=fmt(pl);document.getElementById("dayEnd").textContent=fmt(base+pl);
+ document.getElementById("dayRequired").textContent=fmt(tgt-base);document.getElementById("dayPct").textContent=Math.max(0,(pl/(tgt-base)*100)).toFixed(0)+"%";
+ const st=document.getElementById("dayStatus");st.textContent=pl>=tgt-base?"Target hit":"Open";st.className="status "+(pl>=tgt-base?"green":"");
+}
+function renderNotes(){document.getElementById("notes").value=S.notes[S.selectedDay]||""}
+function saveNotes(){S.notes[S.selectedDay]=document.getElementById("notes").value;save();alert("Notes saved")}
+function renderOverview(){
+ const el=document.getElementById("overview");el.innerHTML="";
+ for(let d=1;d<=settings().days;d++){
+  ensureTrades(d);let pl=S.trades[d].reduce((a,t)=>a+(parseFloat(t.pl)||0),0), req=targetForDay(d)-startOfDay(d);
+  let row=document.createElement("div");row.className="row small";row.style.padding="7px 0";row.style.borderBottom="1px solid var(--line)";
+  row.innerHTML=`<span>Day ${d}</span><span>${fmt(pl)} / ${fmt(req)} <b class="${pl>=req?'green':''}">${pl>=req?'✓':''}</b></span>`;
+  el.appendChild(row);
+ }
+}
+function saveSettings(){
+ S.settings={start:+document.getElementById("start").value,goal:+document.getElementById("goal").value,days:+document.getElementById("days").value,tradesPerDay:+document.getElementById("tradesPerDay").value,spread:+document.getElementById("spread").value,move:+document.getElementById("move").value};
+ if(S.selectedDay>S.settings.days)S.selectedDay=S.settings.days;save();render()
+}
+(function init(){
+ const s=settings();
+ for(const [id,key] of Object.entries({start:"start",goal:"goal",days:"days",tradesPerDay:"tradesPerDay",spread:"spread",move:"move"}))document.getElementById(id).value=s[key];
+ render()
+})();
+</script>
+</body>
+</html>
